@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: newsbot
-  cancel-in-progress: false
+group: newsbot
+cancel-in-progress: false
 
 jobs:
   scan:
