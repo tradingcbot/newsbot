@@ -1,0 +1,43 @@
+name: newsbot
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: newsbot
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore memory of headlines already seen
+        uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: newsbot-state-${{ github.run_id }}
+          restore-keys: newsbot-state-
+      - name: Scan news
+        run: python newsbot.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MODEL: ${{ vars.MODEL }}
+          MIN_IMPACT: ${{ vars.MIN_IMPACT }}
+      - name: Save memory
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: state
+          key: newsbot-state-${{ github.run_id }}
