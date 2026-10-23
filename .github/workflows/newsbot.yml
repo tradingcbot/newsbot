@@ -1,0 +1,54 @@
+# NewsBot setup (about 20 minutes, once)
+
+NewsBot runs on GitHub's computers every 5 minutes, so your PC can be off. Each run it reads about 18 news feeds (Federal Reserve, BLS jobs and inflation data, EIA oil, OilPrice, CNBC, MarketWatch, Investing.com, FXStreet, Kitco, Yahoo Finance and Google News searches), keeps only new headlines, asks Claude which ones move gold, silver, WTI, Brent, US500 or NAS100, and emails you the ones rated medium or high impact.
+
+You enter every password and key yourself. Nobody else sees them.
+
+## 1. Create a GitHub account and repository
+1. Sign up free at https://github.com/signup.
+2. Click **+** (top right) > **New repository**. Name it `newsbot`, choose **Public**, tick **Add a README file**, click **Create repository**.
+   - It must be Public: public repositories get unlimited free Actions minutes; a private one runs out after about a week of 5-minute runs. Your keys stay hidden either way because they are stored as secrets, not in the files.
+
+## 2. Add the files
+1. In the repository click **Add file > Upload files**, drag in `newsbot.py` and `requirements.txt`, click **Commit changes**.
+2. Click **Add file > Create new file**. In the name box type exactly `.github/workflows/newsbot.yml` (the slashes create the folders). Open `newsbot.yml` from this folder in Notepad, copy everything, paste it in, click **Commit changes**.
+
+## 3. Get an Anthropic API key
+1. Go to https://console.anthropic.com, sign in, add a payment method under **Billing** and buy a small amount of credit (for example $10).
+2. Under **Billing > Limits**, set a monthly spend limit (for example $15) so it can never surprise you.
+3. Under **API Keys**, click **Create Key** and copy it.
+
+## 4. Get a Gmail app password
+Use the same Gmail account you use for the cTrader and MT5 alerts. If you already have an app password saved, you can reuse it; otherwise go to https://myaccount.google.com/apppasswords, create one named `newsbot`, and copy the 16 letters.
+
+## 5. Store the secrets in GitHub
+In the repository go to **Settings > Secrets and variables > Actions**.
+
+On the **Secrets** tab click **New repository secret** for each:
+
+| Name | Value |
+|---|---|
+| `ANTHROPIC_API_KEY` | the key from step 3 |
+| `GMAIL_USER` | your Gmail address |
+| `GMAIL_APP_PASSWORD` | the app password from step 4 |
+| `MAIL_TO` | where alerts should go (any address; several separated by commas). Optional: defaults to `GMAIL_USER` |
+
+On the **Variables** tab click **New repository variable**:
+
+| Name | Value |
+|---|---|
+| `MODEL` | `claude-haiku-5-5` (recommended, about $5 a month) or leave it out to use `claude-opus-5-5` (sharper judgement, but roughly $150+ a month at 5-minute scans) |
+| `MIN_IMPACT` | `medium` (default) or `high` for fewer emails |
+
+## 6. Start it
+1. Open the **Actions** tab. If asked, click **I understand my workflows, go ahead and enable them**.
+2. Click **newsbot** on the left, then **Run workflow > Run workflow**.
+3. The first run only remembers what is already in the news and sends nothing, so you don't get a flood. From then on it runs every 5 minutes by itself.
+4. Click a run to see its log: it lists how many new headlines it found, which feeds failed (some sites block automated readers now and then, which is fine), and whether an email went out.
+
+## Good to know
+- GitHub sometimes starts scheduled runs 5 to 15 minutes late when its servers are busy. It is not to-the-second.
+- GitHub emails you automatically if a run fails (for example a wrong password).
+- GitHub pauses schedules on public repositories after 60 days with no changes to the repository. It emails you first; click **Enable workflow** on the Actions tab, or edit any file, to keep it running.
+- To stop it: **Actions > newsbot > ... > Disable workflow**.
+- Treat the emails as awareness, not entry signals: big firms trade headlines within milliseconds. They are most useful for knowing why a market is moving and when to stay out.
